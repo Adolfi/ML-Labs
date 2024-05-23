@@ -1,2 +1,2 @@
-# ML-Labs
-Random Machine Learning Labs
+# Machine Learning
+My experiments around ML.

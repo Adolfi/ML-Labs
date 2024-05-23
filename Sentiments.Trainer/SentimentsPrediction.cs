@@ -5,5 +5,7 @@ using Microsoft.ML.Data;
 public class SentimentsPrediction
 {
     [ColumnName("PredictedLabel")]
-    public string PredictedLabel { get; set; }
+    public float PredictedLabel { get; set; }
+
+    public float[] Score { get; set; }
 }

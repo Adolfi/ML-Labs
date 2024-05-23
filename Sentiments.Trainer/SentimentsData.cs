@@ -5,8 +5,8 @@ using Microsoft.ML.Data;
 public class SentimentsData
 {
     [LoadColumn(0)]
-    public string? Text { get; set; }
+    public string Text { get; set; }
     
     [LoadColumn(1)]
-    public string? Score { get; set; }
+    public float Score { get; set; }
 }

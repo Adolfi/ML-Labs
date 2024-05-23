@@ -7,15 +7,16 @@ class Program
 {
     static void Main(string[] args)
     {        
-        var trainModel = true;
-        var textInput = "This was really good!";
-        var dataInputPath = "data/sentiments-debug1k.csv";
-        var modelOutputPath = "models/sentiments-debug.zip";        
+        var trainModel = false;
+        var textInput = "I hated this movie! I have never seen anything worse!";
+        var dataInputPath = "data/sentiments-test5k.csv";
+        var modelOutputPath = "models/sentiments-test5k.zip";        
         
         var context = new MLContext();
         if(trainModel)
         {
             // 1. Load data
+
             var dataView = context.Data.LoadFromTextFile<SentimentsData>(dataInputPath, hasHeader: true, separatorChar: ',');
 
             // 2. Describe features and labels
@@ -27,6 +28,7 @@ class Program
             var trainingPipeline = dataProcessPipeline
                 .Append(context.MulticlassClassification.Trainers.SdcaMaximumEntropy("Label", "Features"))
                 .Append(context.Transforms.Conversion.MapKeyToValue("PredictedLabel", "Label"));
+;
             
             // 4. Train model
             var model = trainingPipeline.Fit(dataView);
@@ -40,7 +42,7 @@ class Program
             Console.WriteLine("LogLossReduction: " + metrics.LogLossReduction);
 
             // 6. Save model to .zip file
-            context.Model.Save(model, dataView.Schema, Constants.ModelPath);
+            context.Model.Save(model, dataView.Schema, modelOutputPath);
         }
 
         // 7. Load the model
@@ -51,6 +53,47 @@ class Program
         var predictor = context.Model.CreatePredictionEngine<SentimentsData, SentimentsPrediction>(loadedModel);
         var testData = new SentimentsData { Text = textInput};
         var prediction = predictor.Predict(testData);
-        Console.WriteLine($"Predicted: {prediction.PredictedLabel}");
+
+        // Output the prediction results
+        var index = GetIndexOfMaxValue(prediction.Score);
+        var predictedLabel = MapPredictedLabel(index);
+        Console.WriteLine("");
+        Console.WriteLine($"You seem '{predictedLabel}' with your review.");
+        Console.WriteLine("Scores: [" + string.Join(", ", prediction.Score) + "]");
+    }
+
+    private static string MapPredictedLabel(int predictedLabel)
+    {
+        switch (predictedLabel)
+        {
+            case 0:
+                return "Negative";
+            case 1:
+                return "Neutrual";
+            case 2:
+                return "Positive";
+            default:
+                return "Unknown";
+        }
+    }
+
+    public static int GetIndexOfMaxValue(float[] array)
+    {
+        if (array == null || array.Length == 0)
+            throw new ArgumentException("Array cannot be null or empty.");
+
+        int maxIndex = 0;
+        float maxValue = array[0];
+
+        for (int i = 1; i < array.Length; i++)
+        {
+            if (array[i] > maxValue)
+            {
+                maxValue = array[i];
+                maxIndex = i;
+            }
+        }
+
+        return maxIndex;
     }
 }
